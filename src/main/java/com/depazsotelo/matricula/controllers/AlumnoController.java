@@ -58,5 +58,21 @@ public class AlumnoController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> eliminar(@PathVariable Integer id) {
         // ... tu lógica de eliminación lógica existente
+        try {
+            // 1. Buscar el alumno, si no existe devolvemos 404
+            Alumno alumno = alumnoRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Error: Alumno no encontrado."));
+
+            // 2. Eliminación LÓGICA (no física) — el spec exige esto para mantener el historial
+            alumno.setEstado(false);
+            alumnoRepository.save(alumno);
+
+            return ResponseEntity.ok().build();
+
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Error interno: " + e.getMessage());
+        }
     }
 }
