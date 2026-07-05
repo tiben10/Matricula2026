@@ -33,6 +33,17 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
+                        // MEJORA: Director = solo consulta (GET). Antes cualquier rol autenticado
+                        // podía hacer cualquier operación con solo estar logueado.
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/**")
+                        .hasAnyRole("SUPERUSUARIO", "DIRECTOR", "SECRETARIA")
+                        // MEJORA: escritura (crear/editar/eliminar) solo para Superusuario y Secretaria
+                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/**")
+                        .hasAnyRole("SUPERUSUARIO", "SECRETARIA")
+                        .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/**")
+                        .hasAnyRole("SUPERUSUARIO", "SECRETARIA")
+                        .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/**")
+                        .hasAnyRole("SUPERUSUARIO", "SECRETARIA")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
