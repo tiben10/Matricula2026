@@ -35,19 +35,51 @@ public class DataSeeder implements CommandLineRunner {
             System.out.println("✅ Documento DNI creado (ID: 1)");
         }
 
-        // 2. Sembrar Usuario de Auditoría
+        // 2. Sembrar Roles y Usuarios del sistema
         if (rolRepository.count() == 0) {
-            Rol rolAdmin = new Rol();
-            rolAdmin.setNombreRol("ADMIN");
-            rolRepository.save(rolAdmin);
 
-            Usuario admin = new Usuario();
-            admin.setUsuario("admin");
-            admin.setPassword(passwordEncoder.encode("admin123"));
-            admin.setRol(rolAdmin);
-            admin.setEstado(true);
-            usuarioRepository.save(admin);
-            System.out.println("✅ Usuario ADMIN creado (ID: 1)");
+            // MEJORA: los 3 roles que exige el spec (antes solo existía "ADMIN")
+            Rol rolSuperusuario = new Rol();
+            rolSuperusuario.setNombreRol("SUPERUSUARIO");
+            rolSuperusuario.setEstado(true);
+            rolSuperusuario = rolRepository.save(rolSuperusuario);
+
+            Rol rolDirector = new Rol();
+            rolDirector.setNombreRol("DIRECTOR");
+            rolDirector.setEstado(true);
+            rolDirector = rolRepository.save(rolDirector);
+
+            Rol rolSecretaria = new Rol();
+            rolSecretaria.setNombreRol("SECRETARIA");
+            rolSecretaria.setEstado(true);
+            rolSecretaria = rolRepository.save(rolSecretaria);
+
+            // Usuario Superusuario (acceso total, no se puede eliminar)
+            Usuario superusuario = new Usuario();
+            superusuario.setUsuario("admin");
+            superusuario.setPassword(passwordEncoder.encode("admin123"));
+            superusuario.setRol(rolSuperusuario);
+            superusuario.setEstado(true);
+            usuarioRepository.save(superusuario);
+            System.out.println("✅ Usuario SUPERUSUARIO creado (ID: 1)");
+
+            // Usuario Director (solo consulta)
+            Usuario director = new Usuario();
+            director.setUsuario("director");
+            director.setPassword(passwordEncoder.encode("director123"));
+            director.setRol(rolDirector);
+            director.setEstado(true);
+            usuarioRepository.save(director);
+            System.out.println("✅ Usuario DIRECTOR creado (ID: 2)");
+
+            // Usuario Secretaria (todas las operaciones)
+            Usuario secretaria = new Usuario();
+            secretaria.setUsuario("secretaria");
+            secretaria.setPassword(passwordEncoder.encode("secretaria123"));
+            secretaria.setRol(rolSecretaria);
+            secretaria.setEstado(true);
+            usuarioRepository.save(secretaria);
+            System.out.println("✅ Usuario SECRETARIA creado (ID: 3)");
         }
 
         // 3. Sembrar Estructura de Aula (Año, Nivel, Grado)
