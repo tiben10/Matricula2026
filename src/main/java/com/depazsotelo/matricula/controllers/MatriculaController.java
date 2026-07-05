@@ -3,6 +3,7 @@ package com.depazsotelo.matricula.controllers;
 import com.depazsotelo.matricula.models.Matricula;
 import com.depazsotelo.matricula.models.Usuario;
 import com.depazsotelo.matricula.repositories.UsuarioRepository;
+import com.depazsotelo.matricula.security.TotpService;
 import com.depazsotelo.matricula.services.MatriculaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,12 +17,14 @@ public class MatriculaController {
 
     private final MatriculaService matriculaService;
     private final UsuarioRepository usuarioRepository;
+    private final TotpService totpService; // MEJORA: inyectar el nuevo servicio
 
     // POST: http://localhost:8081/api/matriculas/registrar?codAlumno=1&codAula=1
     @PostMapping("/registrar")
     public ResponseEntity<?> registrarMatricula(
             @RequestParam Integer codAlumno,
             @RequestParam Integer codAula,
+            @RequestParam String codigoTotp, // MEJORA: código de 6 dígitos del Authenticator
             Authentication authentication) { // Spring inyecta al usuario del Token aquí
 
         try {
@@ -31,6 +34,12 @@ public class MatriculaController {
             // 2. Buscamos al usuario real en la base de datos para la Auditoría
             Usuario usuarioAuditoria = usuarioRepository.findByUsuario(username)
                     .orElseThrow(() -> new RuntimeException("Usuario no encontrado en la BD"));
+
+            // MEJORA: validar 2FA ANTES de ejecutar la transacción de matrícula
+            if (usuarioAuditoria.getSecret2FA() == null ||
+                    !totpService.validarCodigo(usuarioAuditoria.getSecret2FA(), Integer.parseInt(codigoTotp))) {
+                return ResponseEntity.status(401).body("Código de autenticación inválido");
+            }
 
             // 3. ¡Lanzamos la transacción mágica!
             Matricula nuevaMatricula = matriculaService.registrarMatriculaTransaccional(
