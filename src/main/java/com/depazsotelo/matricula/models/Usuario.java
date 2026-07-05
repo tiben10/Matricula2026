@@ -34,6 +34,11 @@ public class Usuario {
     @Column(updatable = false)
     private LocalDateTime fechaRegistro;
 
+    // MEJORA: guarda el secreto TOTP de Google Authenticator del usuario.
+    // Null hasta que el usuario active el 2FA.
+    @Column(length = 100)
+    private String secret2FA;
+
     @UpdateTimestamp
     private LocalDateTime fechaModificacion;
 
