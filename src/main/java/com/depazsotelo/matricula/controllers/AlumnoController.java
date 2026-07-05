@@ -1,0 +1,55 @@
+package com.depazsotelo.matricula.controllers;
+
+import com.depazsotelo.matricula.dtos.AlumnoRequest;
+import com.depazsotelo.matricula.models.Alumno;
+import com.depazsotelo.matricula.models.TipoDocumento;
+import com.depazsotelo.matricula.repositories.AlumnoRepository;
+import com.depazsotelo.matricula.repositories.TipoDocumentoRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/alumnos")
+@RequiredArgsConstructor
+public class AlumnoController {
+
+    private final AlumnoRepository alumnoRepository;
+    private final TipoDocumentoRepository tipoDocumentoRepository;
+
+    @PostMapping("/registrar")
+    public ResponseEntity<?> registrarAlumno(@RequestBody AlumnoRequest request) {
+
+        try {
+            // 1. Validar que el DNI no exista
+            if (alumnoRepository.findByNumeroDocumento(request.getNumeroDocumento()).isPresent()) {
+                return ResponseEntity.badRequest().body("Error: El Documento ya está registrado.");
+            }
+
+            // 2. Buscar el Tipo de Documento en la BD
+            TipoDocumento tipoDoc = tipoDocumentoRepository.findById(request.getCodTipoDocumento())
+                    .orElseThrow(() -> new RuntimeException("Error: Tipo de documento no encontrado."));
+
+            // 3. Armar el objeto Alumno
+            Alumno nuevoAlumno = new Alumno();
+            nuevoAlumno.setTipoDocumento(tipoDoc);
+            nuevoAlumno.setNombres(request.getNombres());
+            nuevoAlumno.setApellidoPaterno(request.getApellidoPaterno());
+            nuevoAlumno.setApellidoMaterno(request.getApellidoMaterno());
+
+            // Cifrado automático gracias al AesEncryptor
+            nuevoAlumno.setNumeroDocumento(request.getNumeroDocumento());
+            nuevoAlumno.setFechaNacimiento(request.getFechaNacimiento());
+
+            nuevoAlumno.setEstado(true);
+
+            // 4. Guardar en BD
+            Alumno guardado = alumnoRepository.save(nuevoAlumno);
+
+            return ResponseEntity.ok(guardado);
+
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Error interno: " + e.getMessage());
+        }
+    }
+}
