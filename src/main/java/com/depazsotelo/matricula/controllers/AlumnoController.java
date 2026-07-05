@@ -7,6 +7,7 @@ import com.depazsotelo.matricula.repositories.AlumnoRepository;
 import com.depazsotelo.matricula.repositories.TipoDocumentoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -51,5 +52,11 @@ public class AlumnoController {
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Error interno: " + e.getMessage());
         }
+    }
+    // MEJORA: valida el checkbox "Eliminar" de la funcionalidad "Alumnos" para el rol del usuario logueado
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Alumnos', 'eliminar')")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> eliminar(@PathVariable Integer id) {
+        // ... tu lógica de eliminación lógica existente
     }
 }
